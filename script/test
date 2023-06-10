@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+rm -f test/a3-landscape-test.gcode
+
+./svg-to-gcode.sh test/a3-landscape-test.svg

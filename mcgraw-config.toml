@@ -1,0 +1,41 @@
+# https://pypi.org/project/vpype-gcode/
+
+[gwrite.mcgraw]
+unit = "mm"
+document_start = """
+G17
+G21
+G90
+G28
+G01 F800
+M03 S05
+G04 P0.3
+"""
+document_end = """
+M03 S05
+G04 P0.3
+G01 X.000 Y.000
+"""
+layer_start = """
+(Start Layer {layer_id:d})
+"""
+layer_end = """
+(End Layer {layer_id:d})
+"""
+line_start = """
+(Start Line {layer_id:d}.{lines_index:d})
+M03 S120
+G04 P0.3
+"""
+line_end = """
+M03 S05
+G04 P0.3
+(End Line {layer_id:d}.{lines_index:d})
+"""
+segment_first = """
+G00 X{x:.4f} Y{y:.4f}
+"""
+segment = """
+G01 X{x:.4f} Y{y:.4f}
+"""
+vertical_flip = true
