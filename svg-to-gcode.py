@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import code # for debugging
 import os
 import re
 import vpype
@@ -28,11 +29,13 @@ def main(file_handles=[], dimensions=DEFAULT_DIMENSIONS, split_layers=DEFAULT_SP
     # (output_width, output_height) = parse_dimensions(dimensions)
 
     for file_handle in file_handles:
-        # doc = vpype.read_multilayer_svg(file_handle, quantization=0.1)
         doc = vpype.read_multilayer_svg(file_handle, quantization=0.1)
+        # doc = vpype.read_svg(file_handle, quantization=0.1)
 
         # doc_width = (doc.page_size[0], 'px')
         # doc_height = (doc.page_size[1], 'px')
+
+        # code.interact(local=dict(globals(), **locals()))
 
         for id, layer in doc.layers.items():
             tmp = layer.merge(tolerance=0.1)
@@ -48,6 +51,10 @@ def main(file_handles=[], dimensions=DEFAULT_DIMENSIONS, split_layers=DEFAULT_SP
         # I tried repacking the doc.layers dict, to make sure its keys start from 0:
         #   doc._layers = {i: doc.layers[k] for i, k in enumerate(doc.layers)}
         # But then gwrite.gwrite just gives `KeyError: 1` instead!!
+
+        # I tried reading the SVG without layers:
+        #   doc = vpype.read_svg(file_handle, quantization=0.1)
+        # But then click/parser.py complains `TypeError: unhashable type: 'list'`
 
         output_filename = "{}.gcode".format(os.path.splitext(file_handle.name)[0])
         with open(output_filename, 'w') as output_file:
