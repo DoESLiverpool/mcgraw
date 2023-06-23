@@ -20,43 +20,38 @@ Now activate the virtualenv:
 
     . ./venv/bin/activate
 
-Next you’ll want to convert some SVGs to G-Code, suitable for sending to McGraw. In the example below, we’re going to use the test file in `test/a3-landscape-test.svg`, but you’ll want to substitute in the path to your SVG file:
+Eventually, we want the code in this repo to work for _any_ SVG or G-Code file. But for now, you are expected to either pass a perfectly-formed G-Code file to `./send-serial.py`, or to [export some G-Code from Inkscape](https://github.com/DoESLiverpool/somebody-should/wiki/Pen-Plotter-McGraw) then fix it up with `./fix-gcode.py` and send it with `./send-serial.py`.
 
-    ./svg-to-gcode.py test/a3-landscape-test.svg
+For example, assuming you have a G-Code file that has been exported from Inkscape (in this case, `test/a3-landscape-test.gcode`):
 
-(Run `./svg-to-gcode.sh --help` for more info about the default settings and how to override them.)
-
-This will create a G-Code file at, in our case, `test/a3-landscape-test.gcode`.
-
-You can send this G-Code file to McGraw by plugging it in and running:
-
-    ./send-serial.py test/a3-landscape-test.gcode
+    cat test/a3-landscape-test.gcode | ./fix-gcode.py | ./send-serial.py
 
 Note: `send-serial.py` will attempt to guess McGraw’s device path on your system—defaulting to common paths like `/dev/tty.usb*` and `/dev/ttyUSB*`—but you may need to provide a path explicitly:
 
-    ./send-serial.py test/a3-landscape-test.gcode --device /dev/cu.usbserial1
+    … | ./send-serial.py test/a3-landscape-test.gcode --device /dev/cu.usbserial1
 
 McGraw will now start drawing your file.
 
 ## Tips
 
-You can convert multiple SVGs into G-Code at the same time, by passing them all as arguments to `svg-to-gcode.sh`, eg:
+When fixing up your G-Code, you can provide a custom speed parameter (the default is 800):
 
-    ./svg-to-gcode.sh file1.svg file2.svg file3.svg
-    ./svg-to-gcode.sh *.svg
+    … | ./fix-gcode.py --speed 1200 | …
 
-If `send-serial.py` gives you a `ModuleNotFoundError` when you run it, then you’re probably running it outside the virtualenv. Activate the virtualenv, and re-attempt:
+If any of the scripts give you a `ModuleNotFoundError` when you run them, then you’re probably running them outside the virtualenv. Activate the virtualenv, and re-attempt:
 
     . ./venv/bin/activate
-    ./send-serial.py blah/blah/blah…
+    cat test/a3-landscape-test.gcode | ./fix-gcode.py | ./send-serial.py
 
 You can stop `send-serial.py` partway through a file by pressing `Ctrl-C`. Note: This will prevent further commands being sent to McGraw, but McGraw _will_ continue whatever command it’s currently performing – the only way to prevent that is to cut power to McGraw using the red button on its circuit board.
 
 ## How it works
 
-`svg-to-gcode.sh` acts as a friendly wrapper to a complex `vpype` command. [Vpype](https://vpype.readthedocs.io/en/latest/index.html) is a Python utility creating and modifying vector graphics like SVGs. In case, we’re using the [vpype-gwrite plugin](https://github.com/plottertools/vpype-gcode/) to output G-Code. The settings in `mcgraw-config.toml` tell vpype-gcode to use the specific commands (eg: for pen up, pen down) that McGraw the Pen Plotter expects.
+`svg-to-gcode.sh` is meant to be a friendly wrapper to a complex `vpype` command. [Vpype](https://vpype.readthedocs.io/en/latest/index.html) is a Python utility creating and modifying vector graphics like SVGs. In case, we’re using the [vpype-gwrite plugin](https://github.com/plottertools/vpype-gcode/) to output G-Code. The settings in `mcgraw-config.toml` tell vpype-gcode to use the specific commands (eg: for pen up, pen down) that McGraw the Pen Plotter expects. **But it doesn’t work right now.**
 
-`svg-to-gcode.py` uses the `vpype` and `vpype-gcode` Python libraries to read the specified SVG files, optimise them for plotting (combining lines, sorting lines by proximity), and then export them as G-Code files. The settings in `mcgraw-config.toml` tell vpype-gcode to use the specific commands (eg: for pen up, pen down) that McGraw the Pen Plotter expects.
+`svg-to-gcode.py` is meant to use the `vpype` and `vpype-gcode` Python libraries to read the specified SVG files, optimise them for plotting (combining lines, sorting lines by proximity), and then export them as G-Code files. The settings in `mcgraw-config.toml` tell vpype-gcode to use the specific commands (eg: for pen up, pen down) that McGraw the Pen Plotter expects. **But it doesn’t work right now.**
+
+`fix-gcode.py` automatically performs the replacements that we used to do by hand (see _Converting from Inkscape GCodeTools output_, below), making G-Code files exported from Inkscape’s built-in GCodeTools “Path to Gcode” extension suitable for drawing on McGraw.
 
 `send-serial.py` reads G-Code commands from the given file, or from whatever’s piped into it on standard input, establishes a Serial connection with mcGraw, and sends each line of the file to McGraw, printing McGraw’s responses. Since it’s using a “call and response” method (meaning that McGraw has to wait for the next command after finishing the current one, rather than already having the next command in its internal queue) `send-serial.py` potentially slows down McGraw, especially when drawing lots of small line segments. Perhaps one day we could re-write `send-serial.py` to [use a batched approach](https://github.com/gnea/grbl/blob/921e5a9799691118ffe5d4ecf5ccce68efe8a3f8/doc/script/stream.py).
 
