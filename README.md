@@ -34,6 +34,11 @@ McGraw will now start drawing your file.
 
 ## Tips
 
+You can send one-off G-Code commands to McGraw by piping them into `./send-serial.py`, eg:
+
+    echo 'M3 S05' | ./send-serial.py   # pen up
+    echo 'M3 S120' | ./send-serial.py  # pen down
+
 When fixing up your G-Code, you can provide a custom speed parameter (the default is 800):
 
     … | ./fix-gcode.py --speed 1200 | …
@@ -43,7 +48,7 @@ If any of the scripts give you a `ModuleNotFoundError` when you run them, then y
     . ./venv/bin/activate
     cat test/a3-landscape-test.gcode | ./fix-gcode.py | ./send-serial.py
 
-You can stop `send-serial.py` partway through a file by pressing `Ctrl-C`. Note: This will prevent further commands being sent to McGraw, but McGraw _will_ continue whatever command it’s currently performing – the only way to prevent that is to cut power to McGraw using the red button on its circuit board.
+You can stop `send-serial.py` partway through a file by pressing `Ctrl-C`. Note: This will prevent further commands being sent to McGraw, but McGraw _will_ continue whatever commands have already been sent – the only way to prevent that is to cut power to McGraw using the red button on its circuit board.
 
 ## How it works
 
